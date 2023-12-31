@@ -11,7 +11,7 @@ void load_library_client(char *library_name) {
     library = dlopen(library_name, RTLD_LAZY);
 
     if (!library) {
-        printf("faux\n");
+        fprintf(stderr, "Erreur librairie\n");
         exit(1);
     }
 
@@ -25,5 +25,5 @@ void unload_library_client() {
 
 int sndmsg(char msg[1024], int port){
     snd_msg(msg, port);
-    return (int) strlen(msg);
+    return strlen(msg);
 }

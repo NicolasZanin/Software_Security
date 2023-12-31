@@ -14,7 +14,7 @@ void load_library_server(char *library_name) {
     library = dlopen(library_name, RTLD_LAZY);
 
     if (!library) {
-        printf("faux\n");
+        fprintf(stderr, "Erreur librairie\n");
         exit(1);
     }
 
