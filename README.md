@@ -8,21 +8,38 @@ Il y a actuellement 6 fichiers :
 - server.h
 - server.c
 
-Pour exécuter le programme, il faut faire :  
-
+## Execution normal :
+Pour compiler le programme: 
 ```sh
 make
-./exec_client.sh // Pour le client
-./exec_server.sh // Pour le server
 ```
 
-Les commandes classique pour compiler
+Pour exécuter le serveur : 
 ```sh
-// Pour le server
-gcc -Wall -c serveur.c -o server.o
-gcc server.out -L . -l server -o server.o
+./main_server.sh
+```
 
-// Pour le client
-gcc -Wall -c client.c -o client.o
-gcc client.out -L . -l client -o client.o
+Pour exécuter le client :
+```sh
+./sectrans.sh
+```
+
+## Les commandes classique pour compiler :
+
+Pour compiler entièrement, il faut compiler les fichiers communs :
+```sh
+gcc -Wall -c ./serverclient/server.c -o ./serverclient/server.o
+gcc -Wall -c ./serverclient/client.c -o ./serverclient/client.o
+```
+
+Pour compiler le serveur :
+```sh
+gcc -Wall -c ./server/main_server.c -o ./server/main_server.o
+gcc ./server/main_server.o ./serverclient/client.o ./serverclient/server.o -o ./server/main_server
+```
+
+Pour compiler le client :
+```sh
+gcc -Wall -c ./client/main_client.c -o ./client/main_client.o
+gcc ./client/main_client.o ./serverclient/client.o ./serverclient/server.o -o ./client/sectrans
 ```
