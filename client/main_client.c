@@ -6,8 +6,7 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 
-#include "../serverclient/client.h"
-#include "../serverclient/server.h"
+#include "../serverclient/client_server.h"
 
 // Variable static Client
 static int PORT_SERVER = 2000;
@@ -106,7 +105,7 @@ void sendFile(char *pathFile) {
         // Ajoute les 1024 caractères - la taille de l'initiations du fichier
         strncat(msg, file, min(sizeFile, SIZE_MESSAGE - lenInitMsg));
         int tailleRestante = sizeFile - (SIZE_MESSAGE - lenInitMsg);
-        sndmsg(msg, PORT_SERVER);
+        sendmessage(msg, PORT_SERVER);
 
         // Boucle tant qu'on a pas envoyé tous le fichier
         while (tailleRestante >= 0) {
@@ -116,7 +115,7 @@ void sendFile(char *pathFile) {
             lenInitMsg = initMsg(msg, 2, "APPEND,", fileName);
             strncat(msg, &file[sizeFile - tailleRestante], min(tailleRestante, 1024 - lenInitMsg));
             tailleRestante -= SIZE_MESSAGE - lenInitMsg;
-            sndmsg(msg, PORT_SERVER);
+            sendmessage(msg, PORT_SERVER);
         }
     }
 }
@@ -129,7 +128,7 @@ void lireMessageServer(const int fd) {
     char msg[SIZE_MESSAGE];
 
     while(1) {
-        const int tailleMessage = getmsg(msg);
+        const int tailleMessage = getmessage(msg);
 
         // Vérifie si la taille du message est de la taille de l'indicateur de fin 'FINI'
         if (tailleMessage == 4) {
@@ -149,14 +148,14 @@ void lireMessageServer(const int fd) {
 void getFilesServer() {
     // Demande au serveur de récupérer les fichiers du serveur
     char msg[1024] = "LIST\0";
-    sndmsg(msg, PORT_SERVER);
+    sendmessage(msg, PORT_SERVER);
 
     // Démarre le serveur pour recevoir les messages côté client
-    startserver(PORT_CLIENT);
+    start_server(PORT_CLIENT);
 
     // Lis les messages reçu côté serveur et l'affiche sur la sortie standard
     lireMessageServer(fileno(stdout));
-    stopserver();
+    stop_server();
 }
 
 void getFileServer(const char *file) {
@@ -166,12 +165,12 @@ void getFileServer(const char *file) {
     // Demande au serveur de récupérer le fichier du serveur
     char msg[1024] = "FILE,";
     strcat(msg, file);
-    sndmsg(msg, PORT_SERVER);
+    sendmessage(msg, PORT_SERVER);
 
     // Démarre le serveur pour recevoir les messages côté client
-    startserver(PORT_CLIENT);
+    start_server(PORT_CLIENT);
     lireMessageServer(fd);
-    stopserver();
+    stop_server();
     close(fd);
 }
 
@@ -189,9 +188,6 @@ void ecrireInfo() {
 
 
 int main(int argc, char *argv[]) {
-    // Charge la librairie client
-    load_library_client("libclient.so");
-
     if (argc > 1) {
         // Récupère la fonctionnalité et renvoie l'indice de la fonctionnalité correspondante, pour rediriger sur une certaine fonction
         const int numero_parametre = verifyParametre(argv[1]);
@@ -200,14 +196,11 @@ int main(int argc, char *argv[]) {
             sendFile(argv[2]);
         }
         else if (numero_parametre != -1) {
-            load_library_server("libserver.so");
             if (numero_parametre == 1) // Récupérer les fichiers du serveur
                 getFilesServer();
             if (numero_parametre == 2) // Récupère le fichier du serveur
                 getFileServer(argv[2]);
-            unload_library_server();
         }
-        unload_library_client();
         return 0;
     }
 

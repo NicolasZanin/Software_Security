@@ -28,18 +28,17 @@ Pour exécuter le client :
 
 Pour compiler entièrement, il faut compiler les fichiers communs :
 ```sh
-gcc -Wall -c ./serverclient/server.c -o ./serverclient/server.o
-gcc -Wall -c ./serverclient/client.c -o ./serverclient/client.o
+gcc -Wall -c ./serverclient/client_server.c -o ./serverclient/client_server.o
 ```
 
 Pour compiler le serveur :
 ```sh
 gcc -Wall -c ./server/main_server.c -o ./server/main_server.o
-gcc ./server/main_server.o ./serverclient/client.o ./serverclient/server.o -o ./server/main_server
+gcc ./server/main_server.o ./serverclient/client_server.o -L./serverclient -lclient -lserver -o ./server/main_server
 ```
 
 Pour compiler le client :
 ```sh
-gcc -Wall -c ./client/main_client.c -o ./client/main_client.o
-gcc ./client/main_client.o ./serverclient/client.o ./serverclient/server.o -o ./client/sectrans
+gcc -Wall -c ./client/sectrans.c -o ./client/sectrans.o
+gcc ./client/sectrans.o ./serverclient/client_server.o -L./serverclient -lclient -lserver -o ./client/sectrans
 ```

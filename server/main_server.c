@@ -1,5 +1,4 @@
-#include "../serverclient/client.h"
-#include "../serverclient/server.h"
+#include "../serverclient/client_server.h"
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
@@ -32,8 +31,7 @@ int min(const int a,const int b) {
  */
 void handle_sigint(int sig) {
     printf("Close server\n");
-    unload_library_server();
-    stopserver();
+    stop_server();
     exit(0);
 }
 
@@ -102,7 +100,7 @@ void getFilesServer() {
 
         // Si le nom du Fichier + 1 (avec le '\n') est supérieur à la taille du message qu'on peut envoyer
         if (sizeMsg + sizeNameFile + 1 >= SIZE_MESSAGE) {
-            sndmsg(msg, PORT_CLIENT);
+            sendmessage(msg, PORT_CLIENT);
             memset(msg, 0, sizeof(msg)); // Réinitialise à 0 le contenu du message
             sizeMsg = 0;
         }
@@ -114,10 +112,10 @@ void getFilesServer() {
     }
 
     // Envoie le contenu restant de message et envoie un indicateur de Fin soit FINI
-    sndmsg(msg, PORT_CLIENT);
+    sendmessage(msg, PORT_CLIENT);
     memset(msg, 0, sizeof(msg));
     strcpy(msg, "FINI");
-    sndmsg(msg, PORT_CLIENT);
+    sendmessage(msg, PORT_CLIENT);
     closedir(dir);
 }
 
@@ -154,19 +152,17 @@ void getFileServer(const char *fileName) {
             char msg[SIZE_MESSAGE];
             strncpy(msg, &file[(int) s.st_size - tailleRestante], min(tailleRestante, SIZE_MESSAGE));
             tailleRestante -= SIZE_MESSAGE;
-            sndmsg(msg, PORT_CLIENT);
+            sendmessage(msg, PORT_CLIENT);
         }
     }
 
     // Envoie au client un indicateur de fin
     char msg[1024] = "FINI";
-    sndmsg(msg, PORT_CLIENT);
+    sendmessage(msg, PORT_CLIENT);
 }
 
 int main(void) {
-    // Charge la librairie serveur
-    load_library_server("libserver.so");
-    const int portServer = startserver(PORT_SERVER);
+    const int portServer = start_server(PORT_SERVER);
     printf("Port : %d\n", portServer);
 
     // Change le signal SIGINT
@@ -175,7 +171,7 @@ int main(void) {
     // Boucle à l'infini pour que le serveur récupère toujours le message
     while(1) {
         char message[SIZE_MESSAGE];
-        const int sizeMessageClient = getmsg(message);
+        const int sizeMessageClient = getmessage(message);
 
         // Récupère la fonctionnalité et renvoie l'indice de la fonctionnalité correspondante, pour rediriger sur une certaine fonction
         const int parametre = verifyParametre(strtok(message, ","));
@@ -184,18 +180,10 @@ int main(void) {
             case -1: break; // Si la fonctionnalité n'est pas existante
             case 0: writeFile(message, 1, sizeMessageClient); break; // Si on ajoute un fichier
             case 1: writeFile(message, 0, sizeMessageClient); break; // Si on ajoute du contenu à un fichier
-            case 2: load_library_client("libclient.so"); // Charge et décharge la librairie client et récupère les fichier serveur
-                    getFilesServer();
-                    unload_library_client();
-                    break;
-
-            case 3: load_library_client("libclient.so"); // Charge et décharge la librairie client et récupère un fichier serveur
-                    getFileServer(strtok(NULL, ","));
-                    unload_library_client();
-                    break;
+            case 2: getFilesServer(); break; // récupère les fichier serveur
+            case 3: getFileServer(strtok(NULL, ",")); break;// récupère un fichier serveur
             default: break;
         }
     }
-
     return 0;
 }
