@@ -190,20 +190,16 @@ int main(void) {
 
         // Récupère la fonctionnalité et renvoie l'indice de la fonctionnalité correspondante, pour rediriger sur une certaine fonction
         const int parametre = verifyParametre(strtok(message, ","));
+        char *fileName = strtok(NULL, ",");
+        char *deleteFile = strtok(NULL, ",");
         switch (parametre) {
             case -1: break; // Si la fonctionnalité n'est pas existante
             case 0: writeFile(message, 1, sizeMessageClient); break; // Si on ajoute un fichier
             case 1: writeFile(message, 0, sizeMessageClient); break; // Si on ajoute du contenu à un fichier
-            case 2: load_library_client("libclient.so"); // Charge et décharge la librairie client et récupère les fichier serveur
-                    getFilesServer();
-                    unload_library_client();
+            case 2: getFilesServer();
                     break;
 
-            case 3: load_library_client("libclient.so"); // Charge et décharge la librairie client et récupère un fichier serveur
-                    char *fileName = strtok(NULL, ",");
-                    char *deleteFile = strtok(NULL, ",");
-                    getFileServer(fileName, deleteFile != NULL && strcmp(deleteFile, "-r") == 0);
-                    unload_library_client();
+            case 3: getFileServer(fileName, deleteFile != NULL && strcmp(deleteFile, "-r") == 0);
                     break;
             default: break;
         }
