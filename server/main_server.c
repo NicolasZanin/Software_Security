@@ -121,7 +121,7 @@ void getFilesServer() {
     sendmessage(msg, PORT_CLIENT);
     memset(msg, 0, sizeof(msg));
     strcpy(msg, "FINI");
-    sndmsg(msg, PORT_CLIENT);
+    sendmessage(msg, PORT_CLIENT);
     closedir(dir);
 }
 
