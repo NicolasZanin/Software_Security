@@ -129,7 +129,9 @@ void getFilesServer() {
  * \brief Récupère le fichier côté serveur, fonction utilisé quand le client utilise la commande sectrans -down file
  * \param fileName le Nom du fichier à récupérer
  */
-void getFileServer(const char *fileName, int deleteFile) {
+void getFileServer() {
+    char *fileName = strtok(NULL, ",");
+    char *deleteFile = strtok(NULL, ",");
     // Verifie si le client n'a pas envoyé uniquement (msg : FILE)
     if (fileName != NULL) {
 
@@ -196,10 +198,7 @@ int main(void) {
             case 0: writeFile(message, 1, sizeMessageClient); break; // Si on ajoute un fichier
             case 1: writeFile(message, 0, sizeMessageClient); break; // Si on ajoute du contenu à un fichier
             case 2: getFilesServer(); break;
-            case 3: char *fileName = strtok(NULL, ",");
-                    char *deleteFile = strtok(NULL, ",");
-                    getFileServer(fileName, deleteFile != NULL && strcmp(deleteFile, "-r") == 0);
-                    break;
+            case 3: getFileServer(); break;
             default: break;
         }
     }
