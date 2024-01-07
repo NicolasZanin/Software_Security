@@ -208,7 +208,6 @@ int main(int argc, char *argv[]) {
                 getFilesServer();
             if (numero_parametre == 2) // Récupère le fichier du serveur
                 getFileServer(argv[2], argc > 3 && strcmp(argv[3], "-r") == 0);
-            unload_library_server();
         }
         return 0;
     }
