@@ -111,11 +111,17 @@ void getFilesServer() {
         strcat(msg, "\n");
     }
 
+    // Si le message est vide, on notifie le client qu'il n'y a pas de fichier
+    if (sizeMsg == 0) {
+        strcpy(msg, "No file found\n");
+        sizeMsg = 7;
+    }
+
     // Envoie le contenu restant de message et envoie un indicateur de Fin soit FINI
     sendmessage(msg, PORT_CLIENT);
     memset(msg, 0, sizeof(msg));
     strcpy(msg, "FINI");
-    sendmessage(msg, PORT_CLIENT);
+    sndmsg(msg, PORT_CLIENT);
     closedir(dir);
 }
 
@@ -123,8 +129,7 @@ void getFilesServer() {
  * \brief Récupère le fichier côté serveur, fonction utilisé quand le client utilise la commande sectrans -down file
  * \param fileName le Nom du fichier à récupérer
  */
-void getFileServer(const char *fileName) {
-
+void getFileServer(const char *fileName, int deleteFile) {
     // Verifie si le client n'a pas envoyé uniquement (msg : FILE)
     if (fileName != NULL) {
 
@@ -154,6 +159,9 @@ void getFileServer(const char *fileName) {
             tailleRestante -= SIZE_MESSAGE;
             sendmessage(msg, PORT_CLIENT);
         }
+        
+        // Supprime le fichier si l'option -r est utilisé
+        if (deleteFile) remove(pathFile);
     }
 
     // Envoie au client un indicateur de fin
@@ -165,6 +173,13 @@ int main(void) {
     const int portServer = start_server(PORT_SERVER);
     printf("Port : %d\n", portServer);
 
+    // Verifie si le dossier de stockage existe, sinon le créer
+    DIR *dir = opendir(DIRECTORY_SERVER);
+    if (dir == NULL) {
+        mkdir(DIRECTORY_SERVER, 0777);
+        dir = opendir(DIRECTORY_SERVER);
+    }
+
     // Change le signal SIGINT
     signal(SIGINT, handle_sigint);
 
@@ -175,13 +190,21 @@ int main(void) {
 
         // Récupère la fonctionnalité et renvoie l'indice de la fonctionnalité correspondante, pour rediriger sur une certaine fonction
         const int parametre = verifyParametre(strtok(message, ","));
-
         switch (parametre) {
             case -1: break; // Si la fonctionnalité n'est pas existante
             case 0: writeFile(message, 1, sizeMessageClient); break; // Si on ajoute un fichier
             case 1: writeFile(message, 0, sizeMessageClient); break; // Si on ajoute du contenu à un fichier
-            case 2: getFilesServer(); break; // récupère les fichier serveur
-            case 3: getFileServer(strtok(NULL, ",")); break;// récupère un fichier serveur
+            case 2: load_library_client("libclient.so"); // Charge et décharge la librairie client et récupère les fichier serveur
+                    getFilesServer();
+                    unload_library_client();
+                    break;
+
+            case 3: load_library_client("libclient.so"); // Charge et décharge la librairie client et récupère un fichier serveur
+                    char *fileName = strtok(NULL, ",");
+                    char *deleteFile = strtok(NULL, ",");
+                    getFileServer(fileName, deleteFile != NULL && strcmp(deleteFile, "-r") == 0);
+                    unload_library_client();
+                    break;
             default: break;
         }
     }

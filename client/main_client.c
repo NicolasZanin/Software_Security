@@ -34,7 +34,6 @@ int verifyParametre(const char *argOptionUn) {
         return 1;
     if (strcmp("-down", argOptionUn) == 0)
         return 2;
-
     return -1; 
 }
 
@@ -82,11 +81,13 @@ char *getFileName(char *pathFileName) {
  * \brief Envoie le fichier au serveur
  * \param pathFile le path vers le fichier
  */
-void sendFile(char *pathFile) {
+void sendFile(char *pathFile, int deleteFile) {
     // Récupère les informations du fichier et si il existe
     struct stat statFile;
     const int exist = stat(pathFile, &statFile);
     const int sizeFile = statFile.st_size;
+
+    printf("Taille du fichier : %d octets (10Mo Max)\n", sizeFile);
 
     // Si il existe et que c'est un fichier et de taille < 10 mo
     if (exist == 0 && S_ISREG(statFile.st_mode) && sizeFile <= 1048576) {
@@ -117,6 +118,11 @@ void sendFile(char *pathFile) {
             tailleRestante -= SIZE_MESSAGE - lenInitMsg;
             sendmessage(msg, PORT_SERVER);
         }
+
+        printf("Envoie terminé\n");
+
+        // Supprime le fichier si l'option -r est utilisé
+        if (deleteFile) remove(pathFile);
     }
 }
 
@@ -158,13 +164,14 @@ void getFilesServer() {
     stop_server();
 }
 
-void getFileServer(const char *file) {
+void getFileServer(const char *file, int deleteFile) {
     // Ouvre le fichier en lecture
     const int fd = open(file, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR| S_IWUSR);
 
     // Demande au serveur de récupérer le fichier du serveur
     char msg[1024] = "FILE,";
     strcat(msg, file);
+    if (deleteFile) strcat(msg, ",-r");
     sendmessage(msg, PORT_SERVER);
 
     // Démarre le serveur pour recevoir les messages côté client
@@ -184,6 +191,7 @@ void ecrireInfo() {
     printf("-up file , ou file est le chemin du fichier\n");
     printf("-list , affiche les fichiers du serveur\n");
     printf("-down file, pour recuperer le fichier du serveur\n");
+    printf("-r, pour supprimer le fichier du client apres l'avoir envoyer ou recuperer\n");
 }
 
 
@@ -193,13 +201,14 @@ int main(int argc, char *argv[]) {
         const int numero_parametre = verifyParametre(argv[1]);
 
         if (numero_parametre == 0 && argc > 2) { // Si il faut envoyer un fichier au serveur
-            sendFile(argv[2]);
+            sendFile(argv[2], argc > 3 && strcmp(argv[3], "-r") == 0);
         }
         else if (numero_parametre != -1) {
             if (numero_parametre == 1) // Récupérer les fichiers du serveur
                 getFilesServer();
             if (numero_parametre == 2) // Récupère le fichier du serveur
-                getFileServer(argv[2]);
+                getFileServer(argv[2], argc > 3 && strcmp(argv[3], "-r") == 0);
+            unload_library_server();
         }
         return 0;
     }
