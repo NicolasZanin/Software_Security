@@ -23,10 +23,10 @@ EXEC_SERVEUR = $(DIR_SERVEUR)/main_server
 all: sectrans main_serveur
 
 sectrans: $(OBJ_CLIENT) $(OBJ_UTILS)
-	$(CC) $^ -L./serverclient -lserver -lclient -o $(EXEC_CLIENT)
+	$(CC) $^ -L./serverclient -lserver -lclient -o $(EXEC_CLIENT) -lcrypto
 
 main_serveur: $(OBJ_SERVEUR) $(OBJ_UTILS)
-	$(CC) $^ -L./serverclient -lserver -lclient -o $(EXEC_SERVEUR)
+	$(CC) $^ -L./serverclient -lserver -lclient -o $(EXEC_SERVEUR) -lcrypto
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c $< -o $@

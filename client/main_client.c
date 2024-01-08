@@ -87,10 +87,9 @@ void sendFile(char *pathFile, int deleteFile) {
     const int exist = stat(pathFile, &statFile);
     const int sizeFile = statFile.st_size;
 
-    printf("Taille du fichier : %d octets (10Mo Max)\n", sizeFile);
-
     // Si il existe et que c'est un fichier et de taille < 10 mo
     if (exist == 0 && S_ISREG(statFile.st_mode) && sizeFile <= 1048576) {
+        printf("Taille du fichier : %d octets (10Mo Max)\n", sizeFile);
 
         // Créer un tableau de caractère du nombre d'octet du fichier pour lire le fichier en une fois et permet donc d'éviter une modification lors de récupération de caractères étape par étape
         char file[sizeFile];
@@ -117,12 +116,12 @@ void sendFile(char *pathFile, int deleteFile) {
             strncat(msg, &file[sizeFile - tailleRestante], min(tailleRestante, 1024 - lenInitMsg));
             tailleRestante -= SIZE_MESSAGE - lenInitMsg;
             sendmessage(msg, PORT_SERVER);
+
         }
-
-        printf("Envoie terminé\n");
-
         // Supprime le fichier si l'option -r est utilisé
-        if (deleteFile) remove(pathFile);
+        printf("Envoie terminé\n");
+        if (deleteFile)
+            remove(pathFile);
     }
 }
 

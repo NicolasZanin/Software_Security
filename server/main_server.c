@@ -146,24 +146,26 @@ void getFileServer() {
 
         //  Récupère les infos du fichier
         struct stat s;
-        stat(pathFile, &s);
+        const int exist = stat(pathFile, &s);
 
-        // Créer un tableau de caractère du nombre d'octet du fichier pour lire le fichier en une fois et permet donc d'éviter une modification lors de récupération de caractères étape par étape
-        char file[s.st_size];
-        int tailleRestante = s.st_size;
-        read(fd, file, s.st_size);
-        close(fd);
+        if (exist == 0) {
+            // Créer un tableau de caractère du nombre d'octet du fichier pour lire le fichier en une fois et permet donc d'éviter une modification lors de récupération de caractères étape par étape
+            char file[s.st_size];
+            int tailleRestante = s.st_size;
+            read(fd, file, s.st_size);
+            close(fd);
 
-        // Copie 1024 caractères à chaque boucle jusqu'à qu'il n'y est plus de caractères
-        while(tailleRestante > 0) {
-            char msg[SIZE_MESSAGE];
-            strncpy(msg, &file[(int) s.st_size - tailleRestante], min(tailleRestante, SIZE_MESSAGE));
-            tailleRestante -= SIZE_MESSAGE;
-            sendmessage(msg, PORT_CLIENT);
+            // Copie 1024 caractères à chaque boucle jusqu'à qu'il n'y est plus de caractères
+            while(tailleRestante > 0) {
+                char msg[SIZE_MESSAGE];
+                strncpy(msg, &file[(int) s.st_size - tailleRestante], min(tailleRestante, SIZE_MESSAGE));
+                tailleRestante -= SIZE_MESSAGE;
+                sendmessage(msg, PORT_CLIENT);
+            }
+
+            // Supprime le fichier si l'option -r est utilisé
+            if (deleteFile) remove(pathFile);
         }
-        
-        // Supprime le fichier si l'option -r est utilisé
-        if (deleteFile) remove(pathFile);
     }
 
     // Envoie au client un indicateur de fin
@@ -190,6 +192,7 @@ int main(void) {
         char message[SIZE_MESSAGE];
         const int sizeMessageClient = getmessage(message);
 
+        printf("%s\n", message);
         // Récupère la fonctionnalité et renvoie l'indice de la fonctionnalité correspondante, pour rediriger sur une certaine fonction
         const int parametre = verifyParametre(strtok(message, ","));
 
