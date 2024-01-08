@@ -191,8 +191,7 @@ int main(void) {
     while(1) {
         char message[SIZE_MESSAGE];
         const int sizeMessageClient = getmessage(message);
-
-        printf("%s\n", message);
+        
         // Récupère la fonctionnalité et renvoie l'indice de la fonctionnalité correspondante, pour rediriger sur une certaine fonction
         const int parametre = verifyParametre(strtok(message, ","));
 
